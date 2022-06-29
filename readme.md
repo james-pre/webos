@@ -1,0 +1,1 @@
+WebOS is a operating system for in the broswer, with browser APIs - like a VM.

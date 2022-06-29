@@ -1,0 +1,22 @@
+<html>
+<head>
+	<title>WebOS</title>
+	<style>
+		#os-screen{
+			position: fixed;
+			left: 0;
+			width: 100%;
+			top: 0;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="os-screen"></canvas>
+	<script src="webos.js"></script>
+	<script>
+		let osScreen = document.querySelector('#os-screen');
+		const os = new WebOS(osScreen, {});
+	</script>
+</body>
+</html>
