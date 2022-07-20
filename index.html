@@ -2,6 +2,11 @@
 <head>
 	<title>WebOS</title>
 	<style>
+		body{
+			font-family: sans-serif;
+			background-color: #444;
+			color: #ccc;
+		}
 		#os-screen{
 			position: fixed;
 			left: 0;
@@ -15,8 +20,9 @@
 	<canvas id="os-screen"></canvas>
 	<script src="webos.js"></script>
 	<script>
-		let osScreen = document.querySelector('#os-screen');
-		const os = new WebOS(osScreen, {});
+		let canvas = document.querySelector('#os-screen');
+		const os = new WebOS('test', canvas);
+		os.init();
 	</script>
 </body>
 </html>
