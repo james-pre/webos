@@ -1,39 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<script>
-			onerror = (e, s, l, c, err) => alert(err.stack);
-		</script>
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>WebOS</title>
-		<link rel="stylesheet" href="xterm.css" />
-		<style>
-			#terminal {
-				position: fixed;
-				inset: 0;
-			}
-		</style>
+		<title>WebSH Demo</title>
+		<link rel="stylesheet" href="libraries/xterm.css" />
+		<script>
+			onerror = (ev, source, lineno, colno, error) => alert(error);
+		</script>
 	</head>
 	<body>
-		<script type=text/serialized-webfs>
-		</script>
 		<div id="terminal"></div>
-		<script src="xterm.js"></script>
-		<script src="xterm-fit.js"></script>
-		<script src="webos.js"></script>
-		<script>
-			
-			const terminalElement = document.querySelector('#terminal');
-			
-			const os = new WebOS(terminalElement);
-			const fitAddon = new FitAddon.FitAddon();
-			os.terminal.loadAddon(fitAddon);
-			
+		<script src="libraries/xterm.js"></script>
+		<script src="libraries/xterm-fit.js"></script>
+		<script src="libraries/browserfs.js"></script>
+		<script src="os.js"></script>
+		<script type="module">
 
-			os.init(false);
+			const terminalElement = document.querySelector('#terminal');
+
+			const terminal = new Terminal({
+				cursorBlink: true,
+			});
+			const fitAddon = new FitAddon.FitAddon();
+			terminal.loadAddon(fitAddon);
+			terminal.open(terminalElement);
 			fitAddon.fit();
+
+			onerror = (ev, source, lineno, colno, error) => terminal.writeln(`Unhandled error: ${error?.message} at ${lineno}:${colno}`);
+
+			const os = window.os = new WebOS(terminal);
+			await os.init(false);
+
+			if(!os.fs.existsSync('/sbin/init')){
+				terminal.writeln(`Couldn't find /sbin/init`);
+				await os.install('os-minimal');
+			}
+
+			await os.run('/sbin/init');
+
+			//os.run('/bin/websh');
+
 		</script>
 	</body>
 </html>
