@@ -1,0 +1,97 @@
+#webiso xml 0
+<?xml version="1.0" encoding="UTF-8" ?>
+<webiso>
+<directory name="lib" owner="0" group="0" permissions="0o700">
+	<script name="io.sjo" owner="0" group="0" permissions="0o1500" fs-type="file">
+		//#scope os
+		({
+			terminal,
+			fs
+		})
+	</script>
+</directory>
+<directory name="sbin" owner="0" group="0" permissions="0o0700">
+	<script name="init" owner="0" group="0" permissions="0o1100" fs-type="file">
+		//#import <io>
+		terminal.writeln('Hello');
+	</script>
+</directory>
+<directory name="bin" owner="0" group="0" permissions="0o700">
+	<script name="echo" owner="0" group="0" permissions="0o1500" fs-type="file">
+		//#import io
+	</script>
+	
+	<script name="websh" owner="0" group="0" permissions="0o1500" fs-type="file">
+		
+		//#import io
+		let run = (...commands) => {
+			for(let command of commands){
+				let commands = command.replaceAll(/\\$(\\w+)/g, match => env[match.slice(1)]).split(' ');
+
+				let paths = env.PATH.split(':'), hasRun = false;
+				for(let path of paths){
+					if(!hasRun){
+					if(fs.exists(path + '/' + commands[0])){
+						return fs.execute(path + '/' + commands[0], ...commands.slice(1));
+						hasRun = true;
+					}else if(path == paths.at(-1)){
+						return 'bash: ' + commands[0] + ': command not found';
+					}
+					}
+				}
+			}
+		}
+		let prompt = () => '['+env.USER+' '+(env.PWD.split('/').at(-1)||'/')+']$ ';
+
+
+		if(args[0]){
+			let contents = fs.read(args[0]).contents;
+			run(...contents);
+		}else{
+			terminal.writeln(prompt());
+
+			let command = '';
+
+			readchar((e) => {
+				switch (e) {
+					case '\\u0003': // Ctrl+C
+						print('^C');
+						terminal.writeln(prompt());
+						break;
+					case '\\r': // Enter
+						let out = '', append = false;
+						if(command.includes('>>')){
+							out = command.split('>>').at(-1);
+							append = true;
+							command = command.split('>>').slice(0, -1).join('');
+						}
+						if(command.includes('>')){
+							out = command.split('>').at(-1);
+							command = command.split('>').slice(0, -1).join('>');
+						}
+						let output = run(command);
+						if(output) fs.exists(out) == 1 ? fs.write(out, output, append) : terminal.writeln(output);
+						terminal.writeln(prompt());
+						command = '';
+						break;
+					case '\\u007F': // Backspace (DEL)
+						// Do not delete the prompt
+						if (textBuffer.x > prompt().length) {
+							print('\\b \\b');
+							if (command.length > 0) {
+								command = command.substr(0, command.length - 1);
+							}
+						}
+						break;
+					default:
+						if ((e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7e)) || e >= '\\u00a0') {
+							command += e;
+							print(e);
+						}
+				}
+			});
+		}
+		
+	</script>
+</directory>
+</webiso>
